@@ -44,8 +44,9 @@ defmodule Swoosh.Adapters.Mandrill do
   def deliver(%Email{} = email, config \\ []) do
     body = email |> prepare_body(config) |> Poison.encode!
     url = [base_url(config), api_endpoint(email)]
+    hackney_options = [{:connect_timeout, 15_000}, {:recv_timeout, 15_000}]
 
-    case :hackney.post(url, @headers, body, [:with_body]) do
+    case :hackney.post(url, @headers, body, [:with_body | hackney_options]) do
       {:ok, 200, _headers, body} ->
         parse_response(body)
       {:ok, code, _headers, body} when code > 399 ->
